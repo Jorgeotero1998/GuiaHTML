@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teleprompter — Entrevista Magnar</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sora:wght@400;500;600;700;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Sora',sans-serif;background:#080c14;color:#e2e8f0;overflow:hidden}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:280px 1fr;height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  background:#0d1117;border-right:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;overflow:hidden
+}
+.sidebar-header{
+  padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,.3);font-family:'JetBrains Mono',monospace;font-weight:500
+}
+.slide-list{overflow-y:auto;flex:1;padding:8px 0}
+.slide-item{
+  padding:12px 18px;cursor:pointer;
+  border-left:2px solid transparent;
+  transition:all .2s
+}
+.slide-item:hover{background:rgba(255,255,255,.04)}
+.slide-item.active{background:rgba(59,130,246,.08);border-left-color:#3b82f6}
+.slide-num{font-size:9px;color:rgba(255,255,255,.25);font-family:'JetBrains Mono',monospace;margin-bottom:3px;letter-spacing:.1em}
+.slide-name{font-size:12px;color:rgba(255,255,255,.6);font-weight:500;line-height:1.3}
+.slide-item.active .slide-name{color:#93c5fd}
+.progress-bar{height:2px;background:rgba(255,255,255,.06);margin:0}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:width .4s ease;width:10%}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOP ── */
+.top{
+  padding:18px 32px 14px;border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:space-between
+}
+.top-title{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.02em}
+.top-sub{font-size:12px;color:rgba(255,255,255,.3);margin-top:2px}
+.nav-btns{display:flex;gap:8px}
+.nav-btns button{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.6);padding:7px 16px;border-radius:8px;
+  font-family:'Sora',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s
+}
+.nav-btns button:hover{background:rgba(255,255,255,.12);color:#fff}
+.nav-btns button:disabled{opacity:.25;cursor:not-allowed}
+.btn-primary{background:rgba(59,130,246,.15) !important;border-color:rgba(59,130,246,.3) !important;color:#93c5fd !important}
+.btn-primary:hover{background:rgba(59,130,246,.25) !important}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:28px 32px 24px;display:flex;flex-direction:column;gap:20px}
+
+/* ── WHAT TO SAY ── */
+.say-section{
+  background:rgba(59,130,246,.06);
+  border:1px solid rgba(59,130,246,.15);
+  border-left:3px solid #3b82f6;
+  border-radius:12px;padding:20px 22px
+}
+.say-label{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#60a5fa;font-family:'JetBrains Mono',monospace;font-weight:600;margin-bottom:10px}
+.say-text{font-size:15px;color:#e2e8f0;line-height:1.8;font-weight:400}
+.say-text strong{color:#fff;font-weight:600}
+
+/* ── KEY POINTS ── */
+.points-section{display:flex;flex-direction:column;gap:10px}
+.point{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start
+}
+.point-icon{
+  width:24px;height:24px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;flex-shrink:0;margin-top:1px
+}
+.point-icon.blue{background:rgba(59,130,246,.15);color:#93c5fd}
+.point-icon.green{background:rgba(52,211,153,.15);color:#6ee7b7}
+.point-icon.amber{background:rgba(251,191,36,.15);color:#fde68a}
+.point-icon.red{background:rgba(248,113,113,.15);color:#fca5a5}
+.point-icon.purple{background:rgba(167,139,250,.15);color:#c4b5fd}
+.point-body{font-size:13px;color:rgba(255,255,255,.7);line-height:1.6}
+.point-body strong{color:#fff;font-weight:600}
+
+/* ── JOSE QUESTION ── */
+.jose-section{
+  background:rgba(239,68,68,.05);
+  border:1px solid rgba(239,68,68,.15);
+  border-radius:12px;padding:16px 18px
+}
+.jose-label{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#f87171;font-family:'JetBrains Mono',monospace;font-weight:600;margin-bottom:8px}
+.jose-q{font-size:13px;color:#fca5a5;line-height:1.6;font-style:italic}
+.answer-section{
+  background:rgba(52,211,153,.05);
+  border:1px solid rgba(52,211,153,.15);
+  border-radius:12px;padding:16px 18px;margin-top:8px
+}
+.answer-label{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#34d399;font-family:'JetBrains Mono',monospace;font-weight:600;margin-bottom:8px}
+.answer-text{font-size:13px;color:#6ee7b7;line-height:1.7}
+
+/* ── WARNING ── */
+.warn-section{
+  background:rgba(251,191,36,.05);
+  border:1px solid rgba(251,191,36,.15);
+  border-left:3px solid #fbbf24;
+  border-radius:12px;padding:14px 16px
+}
+.warn-text{font-size:13px;color:#fde68a;line-height:1.6}
+
+/* ── CODE SNIPPET ── */
+.code-section{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px}
+.code-label{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.25);font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+pre.mini{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#cdd9e5;line-height:1.75;background:none;border:none;padding:0;margin:0}
+.kw{color:#c792ea}.fn{color:#7ecef4}.str{color:#c3e88d}.num{color:#f78c6c}.cm{color:#3d5165;font-style:italic}.op{color:#89ddff}.cl{color:#ffcb6b}
+
+/* ── BOTTOM STATUS ── */
+.bottom{
+  padding:12px 32px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:space-between
+}
+.status{font-size:11px;color:rgba(255,255,255,.25);font-family:'JetBrains Mono',monospace}
+.hint{font-size:11px;color:rgba(255,255,255,.2);font-family:'JetBrains Mono',monospace}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">Slides — Entrevista Magnar</div>
+    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+    <div class="slide-list" id="slideList"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="top">
+      <div>
+        <div class="top-title" id="mainTitle">Slide 1</div>
+        <div class="top-sub" id="mainSub">Lo que tenés que decir en cada parte</div>
+      </div>
+      <div class="nav-btns">
+        <button id="prev" disabled>← Anterior</button>
+        <button id="next" class="btn-primary">Siguiente →</button>
+      </div>
+    </div>
+
+    <div class="content" id="content"></div>
+
+    <div class="bottom">
+      <div class="status" id="status">01 / 10</div>
+      <div class="hint">← → navegar · click en sidebar para ir directo</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SLIDES = [
+  {
+    name: "Portada",
+    title: "Slide 1 — Portada",
+    sub: "Cómo arrancás la presentación",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís al abrir</div>
+        <div class="say-text">
+          "Hola José, preparé una presentación para que podamos recorrer el proyecto juntos de forma más ordenada. Son 10 slides — voy a explicar cada archivo, cada decisión técnica, y al final hablo del tema de Playwright con total honestidad."
+        </div>
+      </div>
+      <div class="points-section">
+        <div class="point">
+          <div class="point-icon blue">→</div>
+          <div class="point-body"><strong>Tono:</strong> seguro y directo. No te disculpés por nada todavía. Empezás fuerte.</div>
+        </div>
+        <div class="point">
+          <div class="point-icon green">→</div>
+          <div class="point-body"><strong>Duración de este slide:</strong> 30 segundos máximo. Es solo la intro. Pasá rápido al slide 2.</div>
+        </div>
+        <div class="point">
+          <div class="point-icon amber">→</div>
+          <div class="point-body"><strong>Si José interrumpe:</strong> "Claro, arrancamos por donde vos quieras." No te pongas nervioso si no sigue el orden.</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    name: "Arquitectura",
+    title: "Slide 2 — Arquitectura",
+    sub: "Explicá los 4 archivos del proyecto",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "El proyecto tiene 4 archivos principales. <strong>http-client.ts</strong> es la capa de transporte — maneja toda la comunicación HTTP y los scrapers no hablan con axios directamente, hablan con esta clase. <strong>oefa-scraper.ts</strong> tiene la lógica específica del portal OEFA, resuelto con HTTP puro. <strong>pj-scraper.ts</strong> es el del Poder Judicial — lo voy a explicar en detalle más adelante porque ahí hay un punto importante. Y <strong>types/index.ts</strong> define la forma de todos los datos para que TypeScript los valide en compilación."
+        </div>
+      </div>
+      <div class="points-section">
+        <div class="point">
+          <div class="point-icon blue">→</div>
+          <div class="point-body"><strong>Concepto clave:</strong> separación de responsabilidades. El HttpClient sabe de HTTP, el scraper sabe de JSF. Si José pregunta por qué lo separaste, esa es la respuesta.</div>
+        </div>
+        <div class="point">
+          <div class="point-icon green">→</div>
+          <div class="point-body"><strong>Mencioná el entry point:</strong> "El index.ts recibe <code>--site=oefa</code> o <code>--site=pj</code> — agregar un tercer portal es una clase nueva y un nuevo flag. Lo existente no se toca."</div>
+        </div>
+      </div>
+      <div class="jose-section">
+        <div class="jose-label">🎯 Pregunta probable de José</div>
+        <div class="jose-q">"¿Por qué separaste el HttpClient del scraper?"</div>
+        <div class="answer-section">
+          <div class="answer-label">✓ Tu respuesta</div>
+          <div class="answer-text">"Porque la lógica de reintentos, cookies y backoff es la misma para cualquier portal. Si agrego un tercer scraper mañana, no reimplemento nada — solo instancio HttpClient con la config que necesito. El scraper sabe de HTML y datos, el HttpClient sabe de HTTP."</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    name: "HttpClient",
+    title: "Slide 3 — HttpClient",
+    sub: "Las 3 decisiones técnicas clave",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "El HttpClient tiene tres decisiones técnicas que hacen al scraper robusto. La primera es <strong>validateStatus: () => true</strong> — por defecto axios lanza una excepción en cualquier error como el 429. Si eso pasa, el proceso crashea antes de que pueda leer el código y aplicar el backoff. Con esta configuración, axios siempre me devuelve la respuesta y yo decido qué hacer. La segunda es el <strong>cookie jar manual con Map</strong> — JSF mantiene sesión via JSESSIONID y hay que mandarlo en cada request. Y la tercera es el <strong>backoff exponencial con jitter</strong> — cada reintento espera el doble que el anterior, más un tiempo random para que múltiples procesos no reintenten exactamente al mismo segundo."
+        </div>
+      </div>
+      <div class="jose-section">
+        <div class="jose-label">🎯 Pregunta probable de José</div>
+        <div class="jose-q">"¿Por qué el jitter? ¿No alcanza con el exponencial?"</div>
+        <div class="answer-section">
+          <div class="answer-label">✓ Tu respuesta</div>
+          <div class="answer-text">"Si hay múltiples procesos corriendo en paralelo y todos fallan a la vez, sin jitter todos reintentarían exactamente al mismo segundo y volverían a saturar el servidor juntos. El random los desincroniza. Se llama thundering herd — el jitter lo evita."</div>
+        </div>
+      </div>
+      <div class="code-section">
+        <div class="code-label">Código de referencia — getBackoffTime()</div>
+        <pre class="mini"><span class="kw">private</span> <span class="fn">getBackoffTime</span>(attempt: <span class="kw">number</span>) {
+  <span class="kw">return</span> <span class="kw">this</span>.initialBackoff
+    <span class="op">*</span> <span class="cl">Math</span>.<span class="fn">pow</span>(<span class="num">2</span>, attempt)  <span class="cm">// 1000 → 2000 → 4000 → 8000ms</span>
+    <span class="op">+</span> <span class="cl">Math</span>.<span class="fn">random</span>() <span class="op">*</span> <span class="num">500</span>; <span class="cm">// jitter</span>
+}</pre>
+      </div>
+    `
+  },
+  {
+    name: "ViewState JSF",
+    title: "Slide 4 — ViewState",
+    sub: "El concepto más importante del proyecto",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "Este es el concepto más importante del proyecto. JSF mantiene el estado del formulario en el servidor, no en la URL. Cada respuesta HTML incluye un campo hidden llamado <strong>javax.faces.ViewState</strong> que actúa como un ticket de sesión. Si no lo mandás de vuelta en cada POST, el servidor rechaza la request o devuelve datos vacíos. En mi código, la función <strong>extractViewState()</strong> lo lee con Cheerio después de cada respuesta y lo guarda en this.viewState — y está en el oefa-scraper, no en el HttpClient, porque es lógica de JSF, no de HTTP."
+        </div>
+      </div>
+      <div class="jose-section">
+        <div class="jose-label">🎯 Pregunta probable de José</div>
+        <div class="jose-q">"¿Dónde guardás el ViewState exactamente?"</div>
+        <div class="answer-section">
+          <div class="answer-label">✓ Tu respuesta</div>
+          <div class="answer-text">"En oefa-scraper.ts, en this.viewState. No en el HttpClient — el HttpClient maneja HTTP, el scraper maneja la lógica JSF. Lo extraigo con Cheerio después de cada respuesta y lo incluyo en el siguiente POST."</div>
+        </div>
+      </div>
+      <div class="warn-section">
+        <div class="warn-text">⚠ <strong>Error que cometiste en el roleplay anterior:</strong> dijiste que el ViewState se guarda en el HttpClient. Eso es incorrecto. Se guarda en <strong>oefa-scraper.ts → this.viewState</strong>. El HttpClient no sabe nada del ViewState.</div>
+      </div>
+      <div class="code-section">
+        <div class="code-label">extractViewState() — oefa-scraper.ts</div>
+        <pre class="mini"><span class="kw">private</span> <span class="fn">extractViewState</span>($: CheerioAPI): <span class="kw">void</span> {
+  <span class="kw">const</span> vs <span class="op">=</span> $(<span class="str">'input[name="javax.faces.ViewState"]'</span>).<span class="fn">first</span>().<span class="fn">val</span>();
+  <span class="kw">if</span> (vs <span class="op">&&</span> <span class="kw">typeof</span> vs <span class="op">===</span> <span class="str">"string"</span>) <span class="kw">this</span>.viewState.value <span class="op">=</span> vs;
+  <span class="cm">// se llama después de CADA response — el VS puede rotar</span>
+}</pre>
+      </div>
+    `
+  },
+  {
+    name: "Paginación y PDFs",
+    title: "Slide 5 — Paginación y PDFs",
+    sub: "Todo es un POST al mismo endpoint",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "En este portal no hay URLs por página. Todo es un POST al mismo endpoint con parámetros que dicen qué página quiero. Para la página 2 mando <strong>dt_first=10</strong>, para la página 3 <strong>dt_first=20</strong>. El servidor devuelve solo el fragmento HTML del datatable — no la página entera. Eso es una llamada AJAX parcial de PrimeFaces. Para los PDFs es similar — no tienen URL directa, se descargan disparando un componente JSF via POST. La respuesta es el archivo binario. Uso <strong>postBinary()</strong> porque si lo descargo como texto normal, axios intenta parsear los bytes y el PDF queda corrupto."
+        </div>
+      </div>
+      <div class="jose-section">
+        <div class="jose-label">🎯 Pregunta probable de José</div>
+        <div class="jose-q">"¿Por qué no podés hacer un GET simple a la URL del PDF?"</div>
+        <div class="answer-section">
+          <div class="answer-label">✓ Tu respuesta</div>
+          <div class="answer-text">"Porque los PDFs en JSF no tienen URL directa. Se descargan disparando un componente del formulario — hay que mandar un POST con el ID del componente y el ViewState actualizado. El servidor entonces devuelve el binario del PDF en la respuesta."</div>
+        </div>
+      </div>
+      <div class="code-section">
+        <div class="code-label">postBinary() — descarga sin corrupción</div>
+        <pre class="mini"><span class="kw">const</span> buffer <span class="op">=</span> <span class="kw">await</span> <span class="kw">this</span>.http.<span class="fn">postBinary</span>(url, params, {
+  <span class="str">"X-Requested-With"</span>: <span class="str">"XMLHttpRequest"</span>,
+  <span class="str">"Faces-Request"</span>: <span class="str">"partial/ajax"</span>
+});
+fs.<span class="fn">writeFileSync</span>(filepath, buffer); <span class="cm">// arraybuffer → disco</span></pre>
+      </div>
+    `
+  },
+  {
+    name: "Calidad de Datos",
+    title: "Slide 6 — Calidad de Datos",
+    sub: "Sanity checks e idempotencia",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "Tengo tres mecanismos para validar que los datos tienen sentido. Primero, un <strong>sanity check de conteo</strong> — el scraper lee cuántos registros dice el paginador del portal y compara con cuántos extrajo. Si divergen, algo cambió en el HTML. Segundo, <strong>idempotencia con fs.existsSync</strong> — antes de descargar cada PDF, verifico si ya existe en disco. Si existe, lo salteo. Esto hace el scraper reejectable — podés interrumpirlo y reanudarlo sin re-descargar nada. Y tercero, <strong>failed_downloads.json</strong> — cada fallo queda registrado con el motivo y la cantidad de intentos para poder hacer retry posterior."
+        </div>
+      </div>
+      <div class="points-section">
+        <div class="point">
+          <div class="point-icon green">→</div>
+          <div class="point-body"><strong>Salida multi-formato:</strong> documents.json para consumo de datos, documents.csv para análisis, failed_downloads.json para debugging.</div>
+        </div>
+        <div class="point">
+          <div class="point-icon blue">→</div>
+          <div class="point-body"><strong>Si José pregunta qué es un sanity check:</strong> "Es verificar que los datos tienen sentido antes de aceptarlos como correctos. En este caso, que el número que extraje coincida con el que dice el portal."</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    name: "Playwright ⚠",
+    title: "Slide 7 — Playwright",
+    sub: "El punto más crítico — preparalo bien",
+    content: `
+      <div class="warn-section">
+        <div class="warn-text">⚠ <strong>Este es el slide más importante.</strong> José lo va a preguntar sí o sí. No lo esquivés, no te ponés a la defensiva. Lo reconocés directamente y explicás el plan.</div>
+      </div>
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "Acá quiero ser completamente honesto. Para OEFA resolví todo con HTTP puro y Cheerio — que era el approach correcto. Para el PJ de Perú, que además requiere VPN peruana, usé Playwright como fallback. No tenía acceso a esa VPN durante el tiempo del challenge, entonces no pude abrir DevTools e inspeccionar cómo funcionaba el portal JSF. Soy consciente de que viola la restricción técnica del challenge. En producción lo refactorizaría a HTTP puro exactamente igual que hice con OEFA, una vez que tenga acceso con VPN para debuggear el portal."
+        </div>
+      </div>
+      <div class="jose-section">
+        <div class="jose-label">🎯 Pregunta probable de José</div>
+        <div class="jose-q">"¿Cómo lo refactorizarías a HTTP puro?"</div>
+        <div class="answer-section">
+          <div class="answer-label">✓ Tu respuesta</div>
+          <div class="answer-text">"El mismo approach que usé en OEFA. Con VPN activa, abro DevTools en Network tab, identifico el POST de búsqueda con sus parámetros y ViewState, y la request de descarga de PDF. Después replico eso en el HttpClient. OefaScraper ya es el template — misma arquitectura, diferentes IDs de formulario."</div>
+        </div>
+      </div>
+      <div class="points-section">
+        <div class="point">
+          <div class="point-icon amber">→</div>
+          <div class="point-body"><strong>Tono:</strong> tranquilo y directo. No te disculpés en exceso. Una sola vez que lo reconocés y pasás al plan. Si seguís disculpándote parece peor.</div>
+        </div>
+        <div class="point">
+          <div class="point-icon green">→</div>
+          <div class="point-body"><strong>Tu carta fuerte:</strong> OefaScraper demuestra que sabés hacerlo con HTTP puro. El PJ fue una limitación de acceso de red, no de conocimiento técnico.</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    name: "Si Se Rompe",
+    title: "Slide 8 — Continuidad",
+    sub: "¿Qué pasa cuando el portal cambia?",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "Los portales cambian — eso es inevitable. Tengo tres mecanismos para detectarlo. El primero es el sanity check: si el scraper extrae 0 documentos y el portal dice que hay 142, algo cambió en el HTML — eso es una alerta automática. El segundo son los <strong>logs de Winston</strong> — tienen timestamps y niveles de severidad, y son extensibles a alertas externas sin tocar el código. El tercero es el <strong>failed_downloads.json</strong>. Para arreglarlo rápido, lo más importante es tener los selectores CSS separados del código de lógica — así cambiar un ID de formulario es una línea, no una refactorización."
+        </div>
+      </div>
+      <div class="jose-section">
+        <div class="jose-label">🎯 Pregunta probable de José</div>
+        <div class="jose-q">"¿Cómo sabrías que el scraper rompió en producción?"</div>
+        <div class="answer-section">
+          <div class="answer-label">✓ Tu respuesta</div>
+          <div class="answer-text">"El scraper registra cuántos documentos extrae en cada ejecución y lo compara con el total que dice el portal. Si de repente extrae 0 o un número muy distinto al esperado, eso es la alerta — significa que algo cambió en el HTML. Se puede agregar una notificación automática cuando el conteo no coincide."</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    name: "Escalabilidad",
+    title: "Slide 9 — Escalabilidad",
+    sub: "Cómo agregar un portal nuevo",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "La arquitectura está diseñada para extensión sin modificar lo existente. Agregar un tercer portal es crear una nueva clase que sigue el mismo patrón de OefaScraper. El HttpClient, los tipos y el sistema de retry ya existen — no hay que reimplementar nada. Solo hay que implementar la lógica específica de ese portal: fetchInitialPage, la paginación, y parseDocuments. Después agrego el flag en index.ts y listo."
+        </div>
+      </div>
+      <div class="points-section">
+        <div class="point">
+          <div class="point-icon purple">→</div>
+          <div class="point-body"><strong>Si José pregunta de portales difíciles:</strong> sesión que expira → re-autenticar automáticamente. IP bloqueada → proxies rotativos. CAPTCHA visual → 2captcha o endpoints alternativos. Datos duplicados → deduplicación por campo único.</div>
+        </div>
+        <div class="point">
+          <div class="point-icon blue">→</div>
+          <div class="point-body"><strong>Frase clave:</strong> "OefaScraper ya es el template. Para un portal nuevo es el mismo patrón con diferentes IDs de formulario."</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    name: "Cierre",
+    title: "Slide 10 — Cierre",
+    sub: "Cómo cerrar la presentación",
+    content: `
+      <div class="say-section">
+        <div class="say-label">📢 Lo que decís</div>
+        <div class="say-text">
+          "Para cerrar: lo que entrego no es solo código que funciona una vez. Es un sistema HTTP-first — sin overhead de browser, más rápido y controlable. Stateful — replica la sesión JSF completa sin navegador. Y resiliente — backoff, retry, idempotencia y logs para monitoreo. OefaScraper funciona en producción hoy. El PJ lo refactorizo con VPN. Quedo disponible para arrancar de forma inmediata."
+        </div>
+      </div>
+      <div class="jose-section">
+        <div class="jose-label">🎯 Cuando José diga "¿tenés preguntas para mí?"</div>
+        <div class="jose-q">¿Tenés alguna pregunta?</div>
+        <div class="answer-section">
+          <div class="answer-label">✓ Siempre preguntá esto</div>
+          <div class="answer-text">"Sí — ¿cómo detectan cuando un portal cambia su estructura y rompe un scraper en producción? ¿Tienen alertas automáticas o es más reactivo?"</div>
+        </div>
+      </div>
+      <div class="warn-section">
+        <div class="warn-text">⚠ <strong>Nunca cierres con "no, ninguna pregunta".</strong> Esa pregunta muestra que pensás en el trabajo real, no solo en pasar la entrevista.</div>
+      </div>
+      <div class="points-section">
+        <div class="point">
+          <div class="point-icon green">→</div>
+          <div class="point-body"><strong>Si pregunta de disponibilidad:</strong> "Puedo arrancar de forma inmediata."</div>
+        </div>
+        <div class="point">
+          <div class="point-icon blue">→</div>
+          <div class="point-body"><strong>Si pregunta de sueldo:</strong> "Mi expectativa está en el rango de 1400 a 1600 USD. Estoy abierto a conversarlo según el alcance del proyecto."</div>
+        </div>
+      </div>
+    `
+  }
+];
+
+let cur = 0;
+const listEl = document.getElementById('slideList');
+const contentEl = document.getElementById('content');
+const titleEl = document.getElementById('mainTitle');
+const subEl = document.getElementById('mainSub');
+const statusEl = document.getElementById('status');
+const progEl = document.getElementById('prog');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+
+SLIDES.forEach((s, i) => {
+  const item = document.createElement('div');
+  item.className = 'slide-item' + (i === 0 ? ' active' : '');
+  item.innerHTML = `<div class="slide-num">${String(i+1).padStart(2,'0')}</div><div class="slide-name">${s.name}</div>`;
+  item.onclick = () => goTo(i);
+  listEl.appendChild(item);
+});
+
+function goTo(idx) {
+  if (idx < 0 || idx >= SLIDES.length) return;
+  cur = idx;
+  const s = SLIDES[cur];
+  titleEl.textContent = s.title;
+  subEl.textContent = s.sub;
+  contentEl.innerHTML = s.content;
+  contentEl.scrollTop = 0;
+  document.querySelectorAll('.slide-item').forEach((el, i) => el.classList.toggle('active', i === cur));
+  prevBtn.disabled = cur === 0;
+  nextBtn.disabled = cur === SLIDES.length - 1;
+  statusEl.textContent = `${String(cur+1).padStart(2,'0')} / ${String(SLIDES.length).padStart(2,'0')}`;
+  progEl.style.width = `${((cur+1)/SLIDES.length)*100}%`;
+}
+
+prevBtn.onclick = () => goTo(cur - 1);
+nextBtn.onclick = () => goTo(cur + 1);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') goTo(cur + 1);
+  if (e.key === 'ArrowLeft') goTo(cur - 1);
+});
+
+goTo(0);
+</script>
+</body>
+</html>

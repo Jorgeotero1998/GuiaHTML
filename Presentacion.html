@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jorge Otero — Magnar Scraper</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600;700;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Sora',sans-serif;overflow:hidden;background:#000}
+
+/* ── GRADIENTS ── */
+.bg1{background:linear-gradient(145deg,#0a0f1e 0%,#0d1b3e 40%,#1a0a3e 100%)}
+.bg2{background:linear-gradient(145deg,#051525 0%,#0a2540 50%,#001a33 100%)}
+.bg3{background:linear-gradient(145deg,#0a1628 0%,#102040 50%,#0a1e38 100%)}
+.bg4{background:linear-gradient(145deg,#081a10 0%,#0d2d1a 50%,#0a2518 100%)}
+.bg5{background:linear-gradient(145deg,#160a2e 0%,#1e0d42 50%,#120826 100%)}
+.bg6{background:linear-gradient(145deg,#1a0808 0%,#2d0d0d 50%,#1f0a0a 100%)}
+.bg7{background:linear-gradient(145deg,#050f1a 0%,#091a2e 50%,#051525 100%)}
+.bg8{background:linear-gradient(145deg,#04140a 0%,#081f10 50%,#061610 100%)}
+.bg9{background:linear-gradient(145deg,#0a0f28 0%,#0f1840 50%,#080d20 100%)}
+.bg10{background:linear-gradient(145deg,#041410 0%,#061f16 50%,#051a12 100%)}
+
+/* ── NOISE OVERLAY ── */
+.slide::after{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0
+}
+
+/* ── GLOW ORBS ── */
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.18;pointer-events:none;z-index:0}
+
+/* ── LAYOUT ── */
+.deck{width:100vw;height:100vh;position:relative}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  padding:48px 64px 92px;
+  opacity:0;transform:translateY(24px) scale(.985);
+  transition:opacity .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;overflow-y:auto
+}
+.slide>*{position:relative;z-index:1}
+.slide.active{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+.slide.exit{opacity:0;transform:translateY(-16px) scale(.99)}
+
+/* ── TYPOGRAPHY ── */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(255,255,255,.45);font-family:'JetBrains Mono',monospace;
+  font-weight:500;margin-bottom:14px
+}
+.eyebrow::before{content:'';display:block;width:20px;height:1px;background:rgba(255,255,255,.3)}
+
+h1.hero{
+  font-size:64px;font-weight:800;line-height:1.0;
+  letter-spacing:-.03em;margin-bottom:18px;
+  background:linear-gradient(135deg,#ffffff 0%,rgba(255,255,255,.7) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-accent{
+  background:linear-gradient(135deg,#60a5fa 0%,#a78bfa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+h2.stitle{
+  font-size:34px;font-weight:700;letter-spacing:-.025em;
+  color:#fff;line-height:1.1;margin-bottom:8px
+}
+.sub{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:28px;line-height:1.7;font-weight:400}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ── GLASS CARD ── */
+.card{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:20px 22px;
+  backdrop-filter:blur(12px);
+  transition:border-color .2s
+}
+.card:hover{border-color:rgba(255,255,255,.15)}
+.clabel{
+  font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.35);font-family:'JetBrains Mono',monospace;
+  font-weight:600;margin-bottom:6px
+}
+.ctitle{font-size:14px;font-weight:600;color:#fff;margin-bottom:8px;letter-spacing:-.01em}
+.cbody{font-size:13px;color:rgba(255,255,255,.6);line-height:1.65}
+
+/* ── CODE ── */
+pre{
+  background:rgba(0,0,0,.5);
+  border:1px solid rgba(255,255,255,.06);
+  border-left:2px solid rgba(255,255,255,.2);
+  border-radius:12px;padding:14px 18px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px;line-height:1.8;
+  overflow-x:auto;margin:10px 0;color:#cdd9e5
+}
+.kw{color:#c792ea}.fn{color:#7ecef4}.str{color:#c3e88d}
+.num{color:#f78c6c}.cm{color:#3d5165;font-style:italic}
+.op{color:#89ddff}.cl{color:#ffcb6b}
+
+/* ── BOXES ── */
+.bx{border-radius:12px;padding:12px 16px;font-size:13px;line-height:1.65;margin:8px 0}
+.bx-white{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
+.bx-blue{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);color:#93c5fd}
+.bx-green{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:#6ee7b7}
+.bx-red{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:#fca5a5}
+.bx-amber{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:#fde68a}
+.bx-purple{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);color:#c4b5fd}
+
+/* ── LIST ── */
+ul.li{list-style:none;margin:6px 0}
+ul.li li{padding:5px 0 5px 22px;position:relative;font-size:13px;color:rgba(255,255,255,.65);line-height:1.55}
+ul.li li::before{content:'›';position:absolute;left:4px;color:rgba(255,255,255,.3);font-family:'JetBrains Mono',monospace;font-size:14px}
+
+/* ── BADGE ── */
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:10.5px;font-weight:600;font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);margin:3px;letter-spacing:.04em}
+
+/* ── STAT ── */
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px}
+.stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 22px;text-align:center}
+.sv{font-size:26px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;letter-spacing:-.02em}
+.sl{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── FLOW ── */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:10px 0}
+.fn2{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 13px;font-size:11px;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,.7)}
+.fa{color:rgba(255,255,255,.25);font-size:14px;padding:0 2px}
+
+/* ── DIVIDER ── */
+.div{height:1px;background:rgba(255,255,255,.07);margin:18px 0}
+
+/* ── INLINE CODE ── */
+code{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(255,255,255,.08);padding:1px 6px;border-radius:4px;color:rgba(255,255,255,.8)}
+
+/* ── NAV ── */
+.nav{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:14px;z-index:300;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:40px;padding:10px 22px;
+  backdrop-filter:blur(20px)
+}
+.nav button{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.7);padding:7px 20px;border-radius:20px;
+  font-family:'Sora',sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .2s;letter-spacing:.02em
+}
+.nav button:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav button:disabled{opacity:.25;cursor:not-allowed}
+.dots{display:flex;gap:5px;align-items:center}
+.dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.25);transition:all .35s;cursor:pointer}
+.dot.active{background:#fff;width:20px;border-radius:2px}
+
+/* ── TOP BAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 48px;z-index:300;
+  background:linear-gradient(to bottom,rgba(0,0,0,.3),transparent);
+}
+.logo{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.35);font-family:'JetBrains Mono',monospace;font-weight:500}
+.ctr{font-size:11px;color:rgba(255,255,255,.3);font-family:'JetBrains Mono',monospace}
+.hint{font-size:10px;color:rgba(255,255,255,.2);font-family:'JetBrains Mono',monospace}
+
+/* ── ACCENT LINE ── */
+.aline{width:40px;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.5),transparent);margin-bottom:14px;border-radius:1px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Jorge Otero · Magnar · 2026</div>
+  <div class="ctr" id="ctr">01 / 10</div>
+  <div class="hint">← → navegar</div>
+</div>
+
+<div class="deck">
+
+<!-- ══ S1 PORTADA ══ -->
+<div class="slide bg1 active">
+  <div class="orb" style="width:500px;height:500px;top:-100px;right:-100px;background:radial-gradient(circle,#2563eb,transparent)"></div>
+  <div class="orb" style="width:400px;height:400px;bottom:-50px;left:-80px;background:radial-gradient(circle,#7c3aed,transparent)"></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="eyebrow">Presentación Técnica · Magnar · 2026</div>
+    <h1 class="hero">Scraper de<br><span class="hero-accent">Jurisprudencia</span></h1>
+    <p style="font-size:15px;color:rgba(255,255,255,.5);max-width:560px;line-height:1.8;margin-bottom:36px;font-weight:400">Motor de extracción automatizada para portales legales latinoamericanos en JSF/PrimeFaces. Arquitectura HTTP-first, sesión stateful, reintentos resilientes y validación de integridad.</p>
+    <div class="stats">
+      <div class="stat"><div class="sv">HTTP</div><div class="sl">Approach principal</div></div>
+      <div class="stat"><div class="sv">JSF</div><div class="sl">Protocolo manejado</div></div>
+      <div class="stat"><div class="sv">429</div><div class="sl">Rate limit resuelto</div></div>
+      <div class="stat"><div class="sv">2</div><div class="sl">Portales</div></div>
+      <div class="stat"><div class="sv">TS</div><div class="sl">TypeScript</div></div>
+    </div>
+    <div class="div"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:15px;font-weight:600;color:rgba(255,255,255,.8);letter-spacing:-.01em">Jorge Alberto Otero</span>
+      <span class="badge">Full Stack Developer</span>
+      <span class="badge">Backend Focus</span>
+      <span class="badge">TypeScript · Node.js · Python</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S2 ARQUITECTURA ══ -->
+<div class="slide bg2">
+  <div class="orb" style="width:350px;height:350px;top:-80px;right:-60px;background:radial-gradient(circle,#0ea5e9,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Visión General</div>
+  <h2 class="stitle">Arquitectura del Proyecto</h2>
+  <p class="sub">4 archivos. Cada uno con una responsabilidad única. Diseñado para extensión sin modificar lo existente.</p>
+  <div class="g2" style="margin-bottom:14px">
+    <div class="card">
+      <div class="clabel">http-client.ts</div>
+      <div class="ctitle">El cartero — capa de transporte</div>
+      <p class="cbody">Toda la comunicación HTTP pasa por acá. Reintentos, cookies de sesión, backoff exponencial, descarga binaria. Los scrapers no hablan con axios directamente.</p>
+      <div class="bx bx-blue" style="margin-top:10px;font-size:12px">Separación de responsabilidades: si agrego un tercer portal, no reimplemento la lógica de red.</div>
+    </div>
+    <div class="card">
+      <div class="clabel">oefa-scraper.ts</div>
+      <div class="ctitle">Scraper OEFA — HTTP puro ✓</div>
+      <p class="cbody">Lógica específica del portal OEFA. ViewState JSF, paginación por POST, extracción de datos, descarga de PDFs. Sin browser automation.</p>
+      <div class="bx bx-green" style="margin-top:10px;font-size:12px">Completamente funcional. El approach correcto.</div>
+    </div>
+    <div class="card">
+      <div class="clabel">pj-scraper.ts</div>
+      <div class="ctitle">Scraper PJ — Playwright fallback ⚠</div>
+      <p class="cbody">Portal del Poder Judicial de Perú. Requiere VPN peruana. Sin acceso a esa red durante el challenge, usé Playwright. Lo explico en el slide 7.</p>
+      <div class="bx bx-red" style="margin-top:10px;font-size:12px">Viola la restricción. Hay un plan de refactoring claro con VPN.</div>
+    </div>
+    <div class="card">
+      <div class="clabel">types/index.ts</div>
+      <div class="ctitle">Contratos de datos</div>
+      <p class="cbody">Document, ScraperConfig, ScrapeResult, FailedDownload, ViewState. El compilador detecta inconsistencias antes de runtime.</p>
+      <div class="bx bx-purple" style="margin-top:10px;font-size:12px">Sin tipos, un campo mal nombrado rompe todo silenciosamente en producción.</div>
+    </div>
+  </div>
+  <div class="bx bx-white"><strong>Entry point — index.ts:</strong> recibe <code>--site=oefa</code> o <code>--site=pj</code>. Agregar un tercer portal es una clase nueva y un nuevo flag. El HttpClient, los tipos y el logger no se tocan.</div>
+</div>
+
+<!-- ══ S3 HTTP CLIENT ══ -->
+<div class="slide bg3">
+  <div class="orb" style="width:300px;height:300px;top:-60px;left:-60px;background:radial-gradient(circle,#0369a1,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Archivo 1 — http-client.ts</div>
+  <h2 class="stitle">HttpClient — Capa de Transporte</h2>
+  <p class="sub">Tres decisiones técnicas que hacen al scraper robusto: validateStatus, cookie jar manual, backoff con jitter.</p>
+  <div class="g2">
+    <div>
+      <div class="clabel" style="margin-bottom:6px">validateStatus: () => true</div>
+      <p class="cbody" style="margin-bottom:8px">Por defecto axios lanza excepción en status ≥ 400. Si el servidor devuelve 429, el proceso crashea <em>antes</em> de leer el código y aplicar el backoff. Con <code>validateStatus: () => true</code>, axios siempre devuelve la respuesta — yo decido qué hacer.</p>
+      <pre><span class="kw">this</span>.<span class="fn">client</span> <span class="op">=</span> axios.<span class="fn">create</span>({
+  timeout: <span class="num">30000</span>,
+  <span class="cm">// axios nunca lanza — control total</span>
+  <span class="fn">validateStatus</span>: () <span class="op">=></span> <span class="kw">true</span>,
+});</pre>
+      <div class="clabel" style="margin-top:12px;margin-bottom:6px">Cookie Jar — Map&lt;string, string&gt;</div>
+      <p class="cbody" style="margin-bottom:8px">JSF mantiene sesión via JSESSIONID. Un interceptor parsea <code>set-cookie</code> en cada response y actualiza el Map. Antes de cada request, <code>buildCookieHeader()</code> lo serializa.</p>
+      <pre><span class="kw">private</span> cookies: <span class="cl">Map</span><span class="op">&lt;</span><span class="kw">string</span>,<span class="kw">string</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">new</span> <span class="cl">Map</span>();
+
+setCookie.<span class="fn">forEach</span>((cookieStr) <span class="op">=></span> {
+  <span class="kw">const</span> [key, value] <span class="op">=</span> pair.<span class="fn">split</span>(<span class="str">"="</span>);
+  <span class="kw">this</span>.cookies.<span class="fn">set</span>(key.<span class="fn">trim</span>(), value.<span class="fn">trim</span>());
+});</pre>
+    </div>
+    <div>
+      <div class="clabel" style="margin-bottom:6px">Backoff Exponencial con Jitter</div>
+      <pre><span class="kw">private</span> <span class="fn">getBackoffTime</span>(attempt: <span class="kw">number</span>) {
+  <span class="kw">return</span> <span class="kw">this</span>.initialBackoff
+    <span class="op">*</span> <span class="cl">Math</span>.<span class="fn">pow</span>(<span class="num">2</span>, attempt)   <span class="cm">// exponencial</span>
+    <span class="op">+</span> <span class="cl">Math</span>.<span class="fn">random</span>() <span class="op">*</span> <span class="num">500</span>;   <span class="cm">// jitter</span>
+}
+<span class="cm">// intento 0 → ~1000ms</span>
+<span class="cm">// intento 1 → ~2000ms</span>
+<span class="cm">// intento 2 → ~4000ms</span>
+<span class="cm">// intento 3 → ~8000ms</span></pre>
+      <div class="bx bx-white" style="margin-top:10px"><strong>¿Por qué exponencial?</strong> Si el servidor está saturado, reintentar cada 1s lo satura más. El tiempo creciente le da espacio para recuperarse.</div>
+      <div class="bx bx-blue" style="margin-top:8px"><strong>¿Por qué jitter?</strong> Sin él, múltiples procesos reintentarían al mismo segundo exacto — thundering herd. El random los desincroniza.</div>
+      <div class="bx bx-amber" style="margin-top:8px"><strong>También manejo:</strong> errores 500 con el mismo backoff, y errores de red con retry hasta maxRetries.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S4 VIEWSTATE ══ -->
+<div class="slide bg4">
+  <div class="orb" style="width:350px;height:350px;bottom:-80px;right:-60px;background:radial-gradient(circle,#065f46,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Archivo 2 — oefa-scraper.ts — Parte 1</div>
+  <h2 class="stitle">JSF y el ViewState</h2>
+  <p class="sub">El concepto más importante del proyecto. Sin entender el ViewState, el scraper no puede funcionar.</p>
+  <div class="g2">
+    <div>
+      <div class="bx bx-amber" style="margin-bottom:12px"><strong>Portal normal:</strong> www.sitio.com/resultados?page=2<br><strong>Portal JSF:</strong> siempre la misma URL — todo es un POST con parámetros especiales</div>
+      <p class="cbody" style="margin-bottom:8px">JSF mantiene el estado del formulario en el <strong>servidor</strong>. Cada respuesta HTML incluye un campo hidden <code>javax.faces.ViewState</code>. Sin mandarlo de vuelta en cada POST, el servidor rechaza la sesión.</p>
+      <div class="bx bx-white" style="margin-bottom:10px">Pienso en él como un ticket de turno: el servidor te lo da, vos lo guardás, y en el próximo mensaje se lo devolvés.</div>
+      <div class="clabel" style="margin-bottom:6px">Flujo completo de sesión JSF</div>
+      <div class="flow">
+        <div class="fn2">GET /portal</div><div class="fa">→</div>
+        <div class="fn2">HTML + VS·v1</div><div class="fa">→</div>
+        <div class="fn2">POST + VS·v1</div><div class="fa">→</div>
+        <div class="fn2">HTML + VS·v2</div><div class="fa">→</div>
+        <div class="fn2">POST + VS·v2</div>
+      </div>
+    </div>
+    <div>
+      <div class="clabel" style="margin-bottom:6px">extractViewState() — oefa-scraper.ts</div>
+      <pre><span class="kw">private</span> <span class="fn">extractViewState</span>($: CheerioAPI): <span class="kw">void</span> {
+  <span class="kw">const</span> vs <span class="op">=</span> $(
+    <span class="str">'input[name="javax.faces.ViewState"]'</span>
+  ).<span class="fn">first</span>().<span class="fn">val</span>();
+
+  <span class="kw">if</span> (vs <span class="op">&&</span> <span class="kw">typeof</span> vs <span class="op">===</span> <span class="str">"string"</span>) {
+    <span class="kw">this</span>.viewState.value <span class="op">=</span> vs;
+  }
+  <span class="cm">// se llama después de CADA response</span>
+  <span class="cm">// el ViewState puede rotar</span>
+}</pre>
+      <div class="bx bx-green" style="margin-top:10px">Guardado en <strong>oefa-scraper.ts → this.viewState</strong>, no en el HttpClient. El HttpClient maneja HTTP, el scraper maneja la lógica JSF.</div>
+      <div class="bx bx-blue" style="margin-top:8px"><strong>Header obligatorio:</strong> <code>Faces-Request: partial/ajax</code> — le dice al servidor que espere un fragmento HTML, no la página entera.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S5 PAGINACION + PDFS ══ -->
+<div class="slide bg5">
+  <div class="orb" style="width:300px;height:300px;top:-50px;right:-50px;background:radial-gradient(circle,#4c1d95,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Archivo 2 — oefa-scraper.ts — Parte 2</div>
+  <h2 class="stitle">Paginación y Descarga de PDFs</h2>
+  <p class="sub">Todo es un POST al mismo endpoint. La paginación usa offset. Los PDFs se disparan por componente JSF.</p>
+  <div class="g2">
+    <div>
+      <div class="clabel" style="margin-bottom:6px">navigateToPage() — paginación por offset</div>
+      <p class="cbody" style="margin-bottom:8px">No hay URLs distintas por página. Mando un POST con <code>dt_first</code> como offset. El servidor devuelve solo el fragmento HTML del datatable — no la página entera. Eso es una llamada AJAX parcial de PrimeFaces.</p>
+      <pre><span class="cm">// página 2 → dt_first = 10</span>
+<span class="cm">// página 3 → dt_first = 20</span>
+params.<span class="fn">set</span>(<span class="str">"javax.faces.partial.ajax"</span>, <span class="str">"true"</span>);
+params.<span class="fn">set</span>(<span class="str">"javax.faces.source"</span>, <span class="str">`${formId}:dt`</span>);
+params.<span class="fn">set</span>(<span class="str">`${formId}:dt_first`</span>,
+  <span class="cl">String</span>(pageIndex <span class="op">*</span> <span class="num">10</span>));
+params.<span class="fn">set</span>(<span class="str">"javax.faces.ViewState"</span>,
+  <span class="kw">this</span>.viewState.value);</pre>
+    </div>
+    <div>
+      <div class="clabel" style="margin-bottom:6px">downloadPdf() — binario via POST JSF</div>
+      <p class="cbody" style="margin-bottom:8px">Los PDFs no tienen URL directa. Se descargan disparando un componente JSF. Si los descargo como texto normal, los bytes se corrompen. <code>postBinary()</code> usa <code>responseType: arraybuffer</code> para evitarlo.</p>
+      <pre>params.<span class="fn">set</span>(<span class="str">"javax.faces.source"</span>, doc.pdfUrl);
+params.<span class="fn">set</span>(<span class="str">"javax.faces.ViewState"</span>,
+  <span class="kw">this</span>.viewState.value);
+
+<span class="kw">const</span> buffer <span class="op">=</span> <span class="kw">await</span> <span class="kw">this</span>.http.<span class="fn">postBinary</span>(
+  url, params, {
+    <span class="str">"X-Requested-With"</span>: <span class="str">"XMLHttpRequest"</span>,
+    <span class="str">"Faces-Request"</span>: <span class="str">"partial/ajax"</span>
+  }
+);
+fs.<span class="fn">writeFileSync</span>(filepath, buffer);</pre>
+      <div class="bx bx-blue" style="margin-top:8px"><code>responseType: 'arraybuffer'</code> le dice a axios que no intente parsear el binario como texto. Sin esto el PDF queda corrupto e inabribleل.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S6 CALIDAD ══ -->
+<div class="slide bg7">
+  <div class="orb" style="width:300px;height:300px;bottom:-60px;left:-60px;background:radial-gradient(circle,#0c4a6e,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Archivo 2 — oefa-scraper.ts — Parte 3</div>
+  <h2 class="stitle">Calidad de Datos</h2>
+  <p class="sub">Validar que los datos tienen sentido. Idempotencia para reanudar sin duplicados.</p>
+  <div class="g3" style="margin-bottom:14px">
+    <div class="card">
+      <div class="clabel">Sanity Check</div>
+      <div class="ctitle">Conteo esperado vs real</div>
+      <pre style="font-size:11px"><span class="kw">const</span> pag <span class="op">=</span>
+  <span class="kw">this</span>.<span class="fn">parsePagination</span>($);
+<span class="cm">// Portal dice: 142 registros</span>
+<span class="cm">// Extraje: 142 docs ✓</span>
+<span class="cm">// Extraje: 0 docs → ⚠ alerta</span>
+logger.<span class="fn">info</span>(
+  `Found ${pag.totalRecords}`);</pre>
+      <p class="cbody" style="font-size:12px;margin-top:6px">Divergencia = HTML del portal cambió.</p>
+    </div>
+    <div class="card">
+      <div class="clabel">Idempotencia</div>
+      <div class="ctitle">fs.existsSync antes de descargar</div>
+      <pre style="font-size:11px"><span class="kw">if</span> (fs.<span class="fn">existsSync</span>(filepath)) {
+  logger.<span class="fn">info</span>(<span class="str">`Already downloaded`</span>);
+  <span class="kw">return true</span>; <span class="cm">// skip</span>
+}
+<span class="cm">// Solo descarga si no existe</span>
+<span class="cm">// Reejecutar = 100% seguro</span></pre>
+      <p class="cbody" style="font-size:12px;margin-top:6px">El scraper puede interrumpirse y reanudar.</p>
+    </div>
+    <div class="card">
+      <div class="clabel">Registro de fallos</div>
+      <div class="ctitle">failed_downloads.json</div>
+      <pre style="font-size:11px">failedDownloads.<span class="fn">push</span>({
+  document: doc,
+  reason: errorMsg,
+  attempts:
+    config.maxRetries <span class="op">+</span> <span class="num">1</span>
+});
+<span class="cm">// motivo + intentos</span>
+<span class="cm">// permite retry posterior</span></pre>
+      <p class="cbody" style="font-size:12px;margin-top:6px">Sin perder el progreso ya hecho.</p>
+    </div>
+  </div>
+  <div class="clabel" style="margin-bottom:8px">Persistencia multi-formato</div>
+  <div class="g3">
+    <div class="bx bx-green" style="margin:0"><strong>documents.json</strong> — Array estructurado de Document interfaces.</div>
+    <div class="bx bx-green" style="margin:0"><strong>documents.csv</strong> — Análisis estadístico. Campos escapados con comillas dobles.</div>
+    <div class="bx bx-amber" style="margin:0"><strong>failed_downloads.json</strong> — Fallos con motivo. Para retry sin empezar de cero.</div>
+  </div>
+</div>
+
+<!-- ══ S7 PLAYWRIGHT ══ -->
+<div class="slide bg6">
+  <div class="orb" style="width:400px;height:400px;top:-100px;right:-100px;background:radial-gradient(circle,#7f1d1d,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Archivo 3 — pj-scraper.ts</div>
+  <h2 class="stitle">Honestidad Técnica — Playwright</h2>
+  <p class="sub">Restricción de acceso de red, no de conocimiento técnico. El approach HTTP puro ya está validado en OEFA.</p>
+  <div class="g2">
+    <div>
+      <div class="bx bx-red" style="margin-bottom:10px"><strong>¿Qué pasó?</strong> El portal del PJ de Perú requiere VPN peruana. Sin ella, no pude abrir DevTools e inspeccionar el ciclo de vida JSF durante el tiempo del challenge.</div>
+      <div class="bx bx-amber" style="margin-bottom:10px"><strong>¿Qué hice?</strong> Usé Playwright — browser headless que navega el portal como un usuario real. Sé que viola la restricción del challenge. Lo reconozco directamente.</div>
+      <pre><span class="kw">const</span> browser <span class="op">=</span> <span class="kw">await</span> chromium.<span class="fn">launch</span>({
+  headless: <span class="kw">true</span>
+});
+<span class="cm">// FALLBACK: browser automation</span>
+<span class="cm">// Motivo: sin VPN peruana no puedo</span>
+<span class="cm">// debuggear el JSF del portal PJ</span></pre>
+    </div>
+    <div>
+      <div class="bx bx-green" style="margin-bottom:10px"><strong>¿Cómo lo refactorizo a HTTP puro?</strong></div>
+      <ul class="li">
+        <li>Con VPN activa, abro DevTools → Network tab en el portal PJ</li>
+        <li>Identifico el POST de búsqueda: parámetros, ViewState, headers</li>
+        <li>Identifico la request de descarga de PDF — POST JSF con ID del componente</li>
+        <li>Replico en HttpClient — mismo código que ya funciona en OefaScraper</li>
+        <li>OefaScraper ya es el template: misma arquitectura, diferentes IDs de formulario</li>
+      </ul>
+      <div class="bx bx-blue" style="margin-top:10px">El approach HTTP puro ya está validado. El PJ es el mismo problema con una restricción de acceso de red — no de conocimiento técnico.</div>
+      <div class="div"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="badge">✓ OEFA → HTTP puro</span>
+        <span class="badge">⚠ PJ → Playwright fallback</span>
+        <span class="badge">→ Producción → HTTP puro</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S8 SI SE ROMPE ══ -->
+<div class="slide bg8">
+  <div class="orb" style="width:300px;height:300px;top:-60px;right:-40px;background:radial-gradient(circle,#14532d,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Continuidad Operativa</div>
+  <h2 class="stitle">¿Qué Pasa Si Se Rompe?</h2>
+  <p class="sub">Los portales cambian. Tengo 3 mecanismos de detección y un plan claro para arreglarlo rápido.</p>
+  <div class="g2">
+    <div>
+      <div class="clabel" style="margin-bottom:8px">Cómo detecto que algo falló</div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="ctitle">1 — Sanity check de conteo</div>
+        <pre style="font-size:11px"><span class="kw">if</span> (pagination.totalRecords <span class="op">===</span> <span class="num">0</span>) {
+  logger.<span class="fn">warn</span>(<span class="str">"No records — HTML changed?"</span>);
+}
+<span class="cm">// Portal dice 142 → extraje 0</span>
+<span class="cm">// → HTML del portal cambió</span></pre>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="ctitle">2 — Winston structured logs</div>
+        <p class="cbody" style="font-size:12px">Timestamps, niveles info/warn/error, extensible a file transport o alertas externas sin cambiar el código.</p>
+      </div>
+      <div class="card">
+        <div class="ctitle">3 — failed_downloads.json</div>
+        <p class="cbody" style="font-size:12px">Cada fallo registrado con motivo y cantidad de intentos. Retry sin empezar de cero.</p>
+      </div>
+    </div>
+    <div>
+      <div class="clabel" style="margin-bottom:8px">Cómo lo arreglo rápido</div>
+      <div class="bx bx-amber"><strong>Problema más común:</strong> el portal cambia un ID de formulario o selector CSS. El scraper deja de encontrar los elementos.</div>
+      <div class="bx bx-white" style="margin-top:8px"><strong>Corto plazo:</strong> los selectores están en variables. Cambiar <code>formId</code> es una línea de código.</div>
+      <div class="bx bx-green" style="margin-top:8px"><strong>Largo plazo:</strong> mover los selectores a un archivo de config separado. Cambio de portal = cambio de config, no de lógica.</div>
+      <div class="bx bx-blue" style="margin-top:8px"><strong>Para CAPTCHAs:</strong> rate-based → backoff exponencial ya implementado. Visual → servicio como 2captcha o buscar endpoints alternativos sin CAPTCHA.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S9 ESCALA ══ -->
+<div class="slide bg9">
+  <div class="orb" style="width:350px;height:350px;bottom:-80px;left:-60px;background:radial-gradient(circle,#1e3a5f,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Escalabilidad</div>
+  <h2 class="stitle">Agregar un Portal Nuevo</h2>
+  <p class="sub">El HttpClient, los tipos y el sistema de retry ya existen. Un portal nuevo es solo una clase nueva.</p>
+  <div class="g2">
+    <div>
+      <div class="clabel" style="margin-bottom:8px">Pasos para un tercer portal</div>
+      <ul class="li" style="margin-bottom:10px">
+        <li>Crear clase <code>NuevoPortalScraper</code> siguiendo el patrón de OefaScraper</li>
+        <li>Instanciar HttpClient — ya existe, no hay que reimplementar nada</li>
+        <li>Implementar <code>fetchInitialPage()</code>, <code>navigateToPage()</code>, <code>parseDocuments()</code></li>
+        <li>Agregar <code>--site=nuevo</code> en index.ts</li>
+        <li>Los tipos, el logger y el sistema de retry ya están listos</li>
+      </ul>
+      <pre><span class="kw">class</span> <span class="cl">NuevoPortalScraper</span> {
+  <span class="kw">private</span> http: <span class="cl">HttpClient</span>; <span class="cm">// reutilizado</span>
+
+  <span class="kw">async</span> <span class="fn">run</span>(): <span class="cl">Promise</span><span class="op">&lt;</span><span class="cl">ScrapeResult</span><span class="op">&gt;</span> {
+    <span class="cm">// 1. fetchInitialPage</span>
+    <span class="cm">// 2. navegar páginas</span>
+    <span class="cm">// 3. descargar PDFs</span>
+    <span class="cm">// 4. saveResults</span>
+  }
+}</pre>
+    </div>
+    <div>
+      <div class="clabel" style="margin-bottom:8px">Portales difíciles — qué haría</div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="ctitle">Sesión que expira mid-scraping</div>
+        <p class="cbody" style="font-size:12px">Detectar 401/403 o redirect a login. Re-autenticar automáticamente y continuar desde donde quedé.</p>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="ctitle">Portal que bloquea por IP</div>
+        <p class="cbody" style="font-size:12px">Proxies rotativos. Cada sesión sale desde una IP distinta. Para portales públicos latinoamericanos muchas veces alcanza con proxies de la región.</p>
+      </div>
+      <div class="card">
+        <div class="ctitle">Datos duplicados entre páginas</div>
+        <p class="cbody" style="font-size:12px">Deduplicación por campo único — expediente o nroResolucion. Verifico antes de agregar al array si ya existe ese ID.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S10 CIERRE ══ -->
+<div class="slide bg10">
+  <div class="orb" style="width:400px;height:400px;top:-100px;right:-80px;background:radial-gradient(circle,#064e3b,transparent)"></div>
+  <div class="aline"></div>
+  <div class="eyebrow">Cierre</div>
+  <h2 class="stitle">Resumen y Propuesta de Valor</h2>
+  <p class="sub">No es solo código que funciona una vez. Es un sistema diseñado para seguir funcionando cuando los portales cambian.</p>
+  <div class="g3" style="margin-bottom:16px">
+    <div class="card">
+      <div class="clabel">HTTP-first</div>
+      <div class="ctitle">Sin overhead de browser</div>
+      <p class="cbody">Axios + Cheerio. Más rápido, más liviano y más controlable que Playwright para scraping a escala. El approach correcto para portales que permiten HTTP puro.</p>
+    </div>
+    <div class="card">
+      <div class="clabel">Stateful</div>
+      <div class="ctitle">Sesión JSF replicada</div>
+      <p class="cbody">ViewState actualizado en cada response. Cookie jar manual. Headers correctos de PrimeFaces. El portal no sabe que no es un navegador.</p>
+    </div>
+    <div class="card">
+      <div class="clabel">Resiliente</div>
+      <div class="ctitle">Falla gracefully</div>
+      <p class="cbody">Backoff exponencial con jitter. Retry hasta maxRetries. Idempotencia con existsSync. failed_downloads.json. Winston para monitoreo.</p>
+    </div>
+  </div>
+  <div class="div"></div>
+  <div class="g2">
+    <div class="bx bx-green">
+      <strong>Lo que funciona hoy:</strong><br>
+      OefaScraper extrae todos los documentos con HTTP puro, pagina correctamente, descarga PDFs binarios y valida integridad de datos.
+    </div>
+    <div class="bx bx-blue">
+      <strong>Lo que viene:</strong><br>
+      PjScraper refactorizado a HTTP puro con VPN disponible. Selectores en config separado. Sistema de alertas cuando el conteo diverge.
+    </div>
+  </div>
+  <div class="div"></div>
+  <div style="text-align:center">
+    <span class="badge" style="font-size:12px;padding:8px 22px;letter-spacing:.06em">Jorge Alberto Otero — Full Stack Developer</span>
+  </div>
+</div>
+
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button id="prev" disabled>← Anterior</button>
+  <div class="dots" id="dots"></div>
+  <button id="next">Siguiente →</button>
+</div>
+
+<script>
+const slides=document.querySelectorAll('.slide');
+const dotsEl=document.getElementById('dots');
+const prevBtn=document.getElementById('prev');
+const nextBtn=document.getElementById('next');
+const ctrEl=document.getElementById('ctr');
+let cur=0;
+slides.forEach((_,i)=>{
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+});
+function goTo(idx){
+  if(idx<0||idx>=slides.length)return;
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('exit');
+  setTimeout(()=>slides[cur].classList.remove('exit'),500);
+  cur=idx;
+  slides[cur].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+  prevBtn.disabled=cur===0;
+  nextBtn.disabled=cur===slides.length-1;
+  ctrEl.textContent=`${String(cur+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`;
+}
+prevBtn.onclick=()=>goTo(cur-1);
+nextBtn.onclick=()=>goTo(cur+1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')goTo(cur+1);
+  if(e.key==='ArrowLeft')goTo(cur-1);
+});
+</script>
+</body>
+</html>
